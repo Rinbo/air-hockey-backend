@@ -11,6 +11,7 @@ defmodule AirHockeyBackendWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug CORSPlug, origin: "http://localhost:3000"
   end
 
   scope "/", AirHockeyBackendWeb do
@@ -19,8 +20,9 @@ defmodule AirHockeyBackendWeb.Router do
     get "/", PageController, :index
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", AirHockeyBackendWeb do
-  #   pipe_through :api
-  # end
+  scope "/channels", AirHockeyBackendWeb do
+    pipe_through :api
+
+    get "/", ChannelController, :index
+  end
 end
