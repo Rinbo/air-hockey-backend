@@ -4,16 +4,19 @@ defmodule AirHockeyBackendWeb.GameChannel do
   alias AirHockeyBackendWeb.Presence
 
   def join("game:" <> game_name, %{"player_name" => name }, socket) do
-    IO.puts("=============")
-    IO.inspect(socket)
-    IO.puts("=============")
-
-   {:ok, assign(socket, :lobby, name)}
+    send(self(), {:after_join, game_name})
+    {:ok, socket}
   end
+
+  def handle_info({:after_join, game_name}, socket) do
+    {:ok, _} = Presence.track(socket, game_name, %{online_at: inspect(System.system_time(:seconds))})
+    {:noreply, socket}
+  end
+
   
   def handle_in("ping", _payload, socket) do
     IO.puts("=============")
-    IO.inspect(socket)
+    IO.inspect(Presence.list())
     IO.puts("=============")
     {:noreply, socket}
   end
