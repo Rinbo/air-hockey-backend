@@ -1,6 +1,8 @@
 defmodule AirHockeyBackendWeb.GameChannel do
   use AirHockeyBackendWeb, :channel
 
+  alias AirHockeyBackendWeb.Presence
+
   def join("game:" <> game_name, %{"player_name" => name }, socket) do
     IO.puts("=============")
     IO.inspect(socket)

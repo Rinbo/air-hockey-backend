@@ -9,7 +9,8 @@ defmodule AirHockeyBackend.Application do
     # List all child processes to be supervised
     children = [
       # Start the endpoint when the application starts
-      AirHockeyBackendWeb.Endpoint
+      AirHockeyBackendWeb.Endpoint,
+      AirHockeyBackendWeb.Presence
       # Starts a worker by calling: AirHockeyBackend.Worker.start_link(arg)
       # {AirHockeyBackend.Worker, arg},
     ]
