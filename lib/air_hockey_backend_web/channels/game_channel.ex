@@ -9,9 +9,6 @@ defmodule AirHockeyBackendWeb.GameChannel do
   end
 
   def handle_info({:after_join, name}, socket) do
-    #{:ok, _} = Presence.track(socket, name, %{online_at: inspect(System.system_time(:seconds))})
-    #{:noreply, socket}
-
     :ok = Phoenix.PubSub.subscribe(
               socket.pubsub_server,
               "subtopic_listing",
@@ -23,10 +20,10 @@ defmodule AirHockeyBackendWeb.GameChannel do
     {:noreply, socket}
   end
   
-  def handle_in("ping", _payload, socket) do
-    IO.puts("=============")
-    IO.inspect(list_active_unique_games())
-    IO.puts("=============")
+  def handle_in("get_active_games", _payload, socket) do
+    IO.puts("This function was called")
+    games = list_active_unique_games()
+    broadcast!(socket, "active_games", %{games: games})
     {:noreply, socket}
   end
 
