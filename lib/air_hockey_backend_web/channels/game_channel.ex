@@ -4,8 +4,12 @@ defmodule AirHockeyBackendWeb.GameChannel do
   alias AirHockeyBackendWeb.Presence
 
   def join("game:" <> _game_name, %{"player_name" => name }, socket) do
-    send(self(), {:after_join, name})    
-    {:ok, socket}
+    if authorized?(socket, name) do
+      send(self(), {:after_join, name})
+      {:ok, socket}
+    else
+      {:error, %{reason: "unauthorized"}}
+    end
   end
 
   def handle_info({:after_join, name}, socket) do
@@ -15,6 +19,7 @@ defmodule AirHockeyBackendWeb.GameChannel do
               fastlane: {socket.transport_pid, socket.serializer, []}
             )      
     {:ok, _} = Presence.track(self(), "subtopic_listing", name, %{online_at: inspect(System.system_time(:seconds)), topic: socket.topic})
+    {:ok, _} = Presence.track(socket, name, %{online_at: inspect(System.system_time(:seconds))})
     {:noreply, socket}
   end
   
@@ -39,8 +44,23 @@ defmodule AirHockeyBackendWeb.GameChannel do
     Enum.map(unique_entries, fn x ->
       tot = Enum.count(total_entries, fn y -> y == x end)
       %{x => tot}
-    end)
-    
+    end)    
+  end
+  defp number_of_players(socket) do
+    socket
+    |> Presence.list()
+    |> Map.keys()
+    |> length()
+  end
+
+  defp existing_player?(socket, name) do
+    socket
+    |> Presence.list()
+    |> Map.has_key?(name)
+  end
+
+  defp authorized?(socket, name) do
+    number_of_players(socket) < 2 && !existing_player?(socket, name)
   end
 
 end
