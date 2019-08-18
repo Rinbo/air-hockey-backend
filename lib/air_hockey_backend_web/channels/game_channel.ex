@@ -20,10 +20,6 @@ defmodule AirHockeyBackendWeb.GameChannel do
             )      
     {:ok, _} = Presence.track(self(), "subtopic_listing", name, %{online_at: inspect(System.system_time(:seconds)), topic: socket.topic})
     {:ok, _} = Presence.track(socket, name, %{online_at: inspect(System.system_time(:seconds))})
-
-    IO.puts("=======")
-    IO.inspect(number_of_players(socket))
-    IO.puts("=======")
     
     case number_of_players(socket) do
       1 -> push socket, "player_joined", %{message: "master" }
@@ -38,6 +34,11 @@ defmodule AirHockeyBackendWeb.GameChannel do
     IO.puts("This function was called")
     games = list_games_with_player_count()
     broadcast!(socket, "active_games", %{games: games})
+    {:noreply, socket}
+  end
+
+  def handle_in("leave", _payload, socket) do
+    broadcast!(socket, "player_left", %{message: "A player left the channel"})
     {:noreply, socket}
   end
 
