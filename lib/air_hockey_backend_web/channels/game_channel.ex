@@ -25,12 +25,12 @@ defmodule AirHockeyBackendWeb.GameChannel do
     IO.inspect(number_of_players(socket))
     IO.puts("=======")
     
-    role = case number_of_players(socket) do
-      1 -> "master"
-      2 -> "slave"
-    end
-
-    push socket, "player_joined", %{message: role }
+    case number_of_players(socket) do
+      1 -> push socket, "player_joined", %{message: "master" }
+      2 -> 
+        push socket, "player_joined", %{message: "slave"}
+        broadcast!(socket, "game_started", %{message: true})
+    end    
     {:noreply, socket}
   end
   
