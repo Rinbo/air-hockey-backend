@@ -20,6 +20,17 @@ defmodule AirHockeyBackendWeb.GameChannel do
             )      
     {:ok, _} = Presence.track(self(), "subtopic_listing", name, %{online_at: inspect(System.system_time(:seconds)), topic: socket.topic})
     {:ok, _} = Presence.track(socket, name, %{online_at: inspect(System.system_time(:seconds))})
+
+    IO.puts("=======")
+    IO.inspect(number_of_players(socket))
+    IO.puts("=======")
+    
+    role = case number_of_players(socket) do
+      1 -> "master"
+      2 -> "slave"
+    end
+
+    push socket, "player_joined", %{message: role }
     {:noreply, socket}
   end
   
