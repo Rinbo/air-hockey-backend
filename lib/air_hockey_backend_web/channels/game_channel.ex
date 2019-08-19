@@ -2,11 +2,12 @@ defmodule AirHockeyBackendWeb.GameChannel do
   use AirHockeyBackendWeb, :channel
 
   alias AirHockeyBackendWeb.Presence
+  alias AirHockeyBackend.GameState
 
   def join("game:" <> _game_name, %{"player_name" => name }, socket) do
     if authorized?(socket, name) do
       send(self(), {:after_join, name})
-      {:ok, socket}
+      {:ok, assign(socket, :game_state, %GameState{})}
     else
       {:error, %{reason: "unauthorized"}}
     end
@@ -31,7 +32,6 @@ defmodule AirHockeyBackendWeb.GameChannel do
   end
   
   def handle_in("get_active_games", _payload, socket) do
-    IO.puts("This function was called")
     games = list_games_with_player_count()
     broadcast!(socket, "active_games", %{games: games})
     {:noreply, socket}
@@ -40,6 +40,16 @@ defmodule AirHockeyBackendWeb.GameChannel do
   def handle_in("leave", _payload, socket) do
     broadcast!(socket, "player_left", %{message: "A player left the channel"})
     {:noreply, socket}
+  end
+
+  def handle_in("player1_update", %{"striker1" => striker1, "puck" => puck}, socket) do
+    broadcast!(socket, "player1_update", %{striker1: striker1, puck: puck})
+    {:noreply, assign(socket, :game_state, %GameState{socket.assigns.game_state | striker1: striker1, puck: puck})}
+  end
+
+  def handle_in("player2_update", %{"striker2" => striker2}, socket) do
+    broadcast!(socket, "player2_update", %{striker2: striker2 })
+    {:noreply, assign(socket, :game_state, %GameState{socket.assigns.game_state | striker2: striker2})}
   end
 
   defp list_games_with_player_count() do 
