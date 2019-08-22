@@ -42,14 +42,19 @@ defmodule AirHockeyBackendWeb.GameChannel do
     {:noreply, socket}
   end
 
-  def handle_in("player1_update", %{"striker1" => striker1, "puck" => puck}, socket) do
-    broadcast!(socket, "player1_update", %{striker1: striker1, puck: puck})
-    {:noreply, assign(socket, :game_state, %GameState{socket.assigns.game_state | striker1: striker1, puck: puck})}
+  def handle_in("player1_update", %{"striker1" => striker1}, socket) do
+    broadcast!(socket, "player1_update", %{striker1: striker1})
+    {:noreply, assign(socket, :game_state, %GameState{socket.assigns.game_state | striker1: striker1})}
   end
 
   def handle_in("player2_update", %{"striker2" => striker2}, socket) do
     broadcast!(socket, "player2_update", %{striker2: striker2 })
     {:noreply, assign(socket, :game_state, %GameState{socket.assigns.game_state | striker2: striker2})}
+  end
+
+  def handle_in("puck_update", %{"puck" => puck}, socket) do
+    broadcast!(socket, "puck_update", %{puck: puck })
+    {:noreply, assign(socket, :game_state, %GameState{socket.assigns.game_state | puck: puck})}
   end
 
   defp list_games_with_player_count() do 
