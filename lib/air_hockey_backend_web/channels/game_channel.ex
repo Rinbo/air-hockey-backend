@@ -23,11 +23,12 @@ defmodule AirHockeyBackendWeb.GameChannel do
     {:ok, _} = Presence.track(socket, name, %{online_at: inspect(System.system_time(:seconds))})
     
     case number_of_players(socket) do
-      1 -> push socket, "player_joined", %{message: "master" }
+      1 -> 
+        push socket, "player_joined", %{message: "master" }
       2 -> 
         push socket, "player_joined", %{message: "slave"}
-        broadcast!(socket, "game_started", %{message: true})
-    end    
+        broadcast!(socket, "game_started", %{message: true, subscribers: get_subscriber_list(socket)})   
+    end
     {:noreply, socket}
   end
   
@@ -38,7 +39,7 @@ defmodule AirHockeyBackendWeb.GameChannel do
   end
 
   def handle_in("leave", _payload, socket) do
-    broadcast!(socket, "player_left", %{message: "A player left the channel"})
+    broadcast!(socket, "player_left", %{message: true})
     {:noreply, socket}
   end
 
@@ -50,6 +51,11 @@ defmodule AirHockeyBackendWeb.GameChannel do
   def handle_in("player2_update", %{"striker2" => striker2}, socket) do
     broadcast!(socket, "player2_update", %{striker2: striker2 })
     {:noreply, assign(socket, :game_state, %GameState{socket.assigns.game_state | striker2: striker2})}
+  end
+
+  def handle_in("someone_scored", %{"score" => score}, socket) do    
+    broadcast!(socket, "update_score", %{score: score})
+    {:noreply, assign(socket, :game_state, %GameState{socket.assigns.game_state | score: score})}
   end
 
   defp list_games_with_player_count() do 
@@ -83,6 +89,11 @@ defmodule AirHockeyBackendWeb.GameChannel do
 
   defp authorized?(socket, name) do
     number_of_players(socket) < 2 && !existing_player?(socket, name)
+  end
+
+  defp get_subscriber_list(socket) do
+    [player1, player2] = Map.keys(Presence.list(socket))
+    %{player1: player1, player2: player2}
   end
 
 end
