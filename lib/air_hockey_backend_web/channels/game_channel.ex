@@ -58,6 +58,11 @@ defmodule AirHockeyBackendWeb.GameChannel do
     {:noreply, assign(socket, :game_state, %GameState{socket.assigns.game_state | score: score})}
   end
 
+  def handle_in("game_complete", _payload, socket) do    
+    broadcast!(socket, "game_complete", %{})
+    {:noreply, socket}
+  end
+
   defp list_games_with_player_count() do 
     total_entries = Presence.list("subtopic_listing")
     |> Map.values
