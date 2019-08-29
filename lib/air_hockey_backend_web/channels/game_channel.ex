@@ -64,7 +64,7 @@ defmodule AirHockeyBackendWeb.GameChannel do
   end
 
   def handle_in("chat_message_out", %{"name" => name, "newMessage" => new_message}, socket) do    
-    broadcast!(socket, "incoming_chat_message", %{name: name, incoming_message: new_message})
+    broadcast!(socket, "incoming_chat_message", %{name: name, incoming_message: new_message, timestamp: inspect(System.system_time(:seconds)) })
     {:noreply, socket}
   end
 
