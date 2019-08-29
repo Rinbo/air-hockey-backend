@@ -63,6 +63,11 @@ defmodule AirHockeyBackendWeb.GameChannel do
     {:noreply, socket}
   end
 
+  def handle_in("chat_message_out", %{"name" => name, "newMessage" => new_message}, socket) do    
+    broadcast!(socket, "incoming_chat_message", %{name: name, incoming_message: new_message})
+    {:noreply, socket}
+  end
+
   defp list_games_with_player_count() do 
     total_entries = Presence.list("subtopic_listing")
     |> Map.values
