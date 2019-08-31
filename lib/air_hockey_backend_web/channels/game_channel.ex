@@ -41,9 +41,10 @@ defmodule AirHockeyBackendWeb.GameChannel do
     broadcast!(socket, "game_started", %{message: true, subscribers: get_subscriber_list(socket)})
     {:noreply, socket}
   end
+
   
-  def handle_in("get_active_games", _payload, socket) do
-    games = list_games_with_player_count(socket)
+  def handle_in("get_active_games", _payload, socket) do    
+    games = list_games_with_player_count()
     broadcast!(socket, "active_games", %{games: games})
     {:noreply, socket}
   end
@@ -78,7 +79,7 @@ defmodule AirHockeyBackendWeb.GameChannel do
     {:noreply, socket}
   end
 
-  defp list_games_with_player_count(socket) do 
+  defp list_games_with_player_count() do 
     total_entries = Presence.list("subtopic_listing")
     |> Map.values
     |> Enum.map(fn element -> 
@@ -91,7 +92,7 @@ defmodule AirHockeyBackendWeb.GameChannel do
 
     Enum.map(unique_entries, fn x ->
       tot = Enum.count(total_entries, fn y -> y == x end)
-      %{x => tot, status: socket.assigns.game_state.status}
+      %{x => tot}
     end)    
   end
   defp number_of_players(socket) do
