@@ -4,8 +4,8 @@ defmodule AirHockeyBackendWeb.GameChannel do
   alias AirHockeyBackendWeb.Presence
   alias AirHockeyBackend.GameState
 
-  def join("game:" <> _game_name, %{"player_name" => name }, socket) do
-    if authorized?(socket, name) do
+  def join("game:" <> game_name, %{"player_name" => name }, socket) do  
+    if authorized?(socket, name, game_name) do
       send(self(), {:after_join, name})
       {:ok, assign(socket, :game_state, %GameState{})}
     else
@@ -19,21 +19,31 @@ defmodule AirHockeyBackendWeb.GameChannel do
               "subtopic_listing",
               fastlane: {socket.transport_pid, socket.serializer, []}
             )      
-    {:ok, _} = Presence.track(self(), "subtopic_listing", name, %{online_at: inspect(System.system_time(:seconds)), topic: socket.topic})
+    {:ok, _} = Presence.track(self(), "subtopic_listing", name, %{online_at: inspect(System.system_time(:second)), topic: socket.topic})
     {:ok, _} = Presence.track(socket, name, %{online_at: inspect(System.system_time(:seconds))})
     
-    case number_of_players(socket) do
-      1 -> 
-        push socket, "player_joined", %{message: "master" }
-      2 -> 
-        push socket, "player_joined", %{message: "slave"}
-        broadcast!(socket, "game_started", %{message: true, subscribers: get_subscriber_list(socket)})   
+    if (socket.topic != "game:lobby") do
+      case number_of_players(socket) do
+        1 -> send(self(), {:player1_joined, %{}})
+        2 -> send(self(), {:player2_joined, %{}})
+      end
     end
+    {:noreply, socket}
+  end
+
+  def handle_info({ :player1_joined, _ }, socket) do
+    push socket, "player_joined", %{message: "master" }
+    {:noreply, socket}
+  end
+
+  def handle_info({ :player2_joined, _ }, socket) do
+    push socket, "player_joined", %{message: "slave"}
+    broadcast!(socket, "game_started", %{message: true, subscribers: get_subscriber_list(socket)})
     {:noreply, socket}
   end
   
   def handle_in("get_active_games", _payload, socket) do
-    games = list_games_with_player_count()
+    games = list_games_with_player_count(socket)
     broadcast!(socket, "active_games", %{games: games})
     {:noreply, socket}
   end
@@ -64,11 +74,11 @@ defmodule AirHockeyBackendWeb.GameChannel do
   end
 
   def handle_in("chat_message_out", %{"name" => name, "newMessage" => new_message}, socket) do    
-    broadcast!(socket, "incoming_chat_message", %{name: name, incoming_message: new_message, timestamp: inspect(System.system_time(:seconds)) })
+    broadcast!(socket, "incoming_chat_message", %{name: name, incoming_message: new_message, timestamp: inspect(System.system_time(:second)) })
     {:noreply, socket}
   end
 
-  defp list_games_with_player_count() do 
+  defp list_games_with_player_count(socket) do 
     total_entries = Presence.list("subtopic_listing")
     |> Map.values
     |> Enum.map(fn element -> 
@@ -81,7 +91,7 @@ defmodule AirHockeyBackendWeb.GameChannel do
 
     Enum.map(unique_entries, fn x ->
       tot = Enum.count(total_entries, fn y -> y == x end)
-      %{x => tot}
+      %{x => tot, status: socket.assigns.game_state.status}
     end)    
   end
   defp number_of_players(socket) do
@@ -97,8 +107,11 @@ defmodule AirHockeyBackendWeb.GameChannel do
     |> Map.has_key?(name)
   end
 
-  defp authorized?(socket, name) do
-    number_of_players(socket) < 2 && !existing_player?(socket, name)
+  defp authorized?(socket, name, game_name) do
+    case game_name do
+      "lobby" -> true
+      _ -> number_of_players(socket) < 2 && !existing_player?(socket, name)
+    end
   end
 
   defp get_subscriber_list(socket) do
