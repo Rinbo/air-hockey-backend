@@ -20,15 +20,18 @@ defmodule AirHockeyBackendWeb.GameChannel do
               fastlane: {socket.transport_pid, socket.serializer, []}
             )      
     {:ok, _} = Presence.track(self(), "subtopic_listing", name, %{online_at: inspect(System.system_time(:second)), topic: socket.topic})
-    {:ok, _} = Presence.track(socket, name, %{online_at: inspect(System.system_time(:seconds))})
+   
+    {:ok, _} = Presence.track(socket, name, %{online_at: inspect(System.system_time(:second))})
     
     if (socket.topic != "game:lobby") do
       case number_of_players(socket) do
-        1 -> send(self(), {:player1_joined, %{}})
-        2 -> send(self(), {:player2_joined, %{}})
+        1 -> 
+          send(self(), {:player1_joined, %{}})
+        2 -> 
+          send(self(), {:player2_joined, %{}})
       end
     end
-    {:noreply, socket}
+    {:noreply, assign(socket, :name, name)}
   end
 
   def handle_info({ :player1_joined, _ }, socket) do
@@ -36,12 +39,17 @@ defmodule AirHockeyBackendWeb.GameChannel do
     {:noreply, socket}
   end
 
-  def handle_info({ :player2_joined, _ }, socket) do
+  def handle_info({ :player2_joined, _ }, socket) do   
     push socket, "player_joined", %{message: "slave"}
-    broadcast!(socket, "game_started", %{message: true, subscribers: get_subscriber_list(socket)})
+    broadcast!(socket, "game_set", %{message: true})
     {:noreply, socket}
   end
 
+  def handle_in("start_game", _payload, socket) do
+    :ok = Presence.untrack(self(), "subtopic_listing", socket.assigns.name)
+    broadcast!(socket, "game_started", %{message: true, subscribers: get_subscriber_list(socket)})
+    {:noreply, socket}
+  end
   
   def handle_in("get_active_games", _payload, socket) do    
     games = list_games_with_player_count()
@@ -64,7 +72,7 @@ defmodule AirHockeyBackendWeb.GameChannel do
     {:noreply, assign(socket, :game_state, %GameState{socket.assigns.game_state | striker2: striker2})}
   end
 
-  def handle_in("someone_scored", %{"score" => score}, socket) do    
+  def handle_in("someone_scored", %{"score" => score}, socket) do
     broadcast!(socket, "update_score", %{score: score})
     {:noreply, assign(socket, :game_state, %GameState{socket.assigns.game_state | score: score})}
   end
@@ -95,6 +103,7 @@ defmodule AirHockeyBackendWeb.GameChannel do
       %{x => tot}
     end)    
   end
+
   defp number_of_players(socket) do
     socket
     |> Presence.list()
@@ -120,4 +129,9 @@ defmodule AirHockeyBackendWeb.GameChannel do
     %{player1: player1, player2: player2}
   end
 
+  defimpl Jason.Encoder, for: [MapSet, Range, Stream] do
+    def encode(struct, opts) do
+      Jason.Encode.list(Enum.to_list(struct), opts)
+    end
+  end
 end
