@@ -35,13 +35,24 @@ defmodule AirHockeyBackendWeb.GameChannel do
   end
 
   def handle_info({ :player1_joined, _ }, socket) do
-    push socket, "player_joined", %{message: "master" }
+    push socket, "set_role", %{role: "master" }
+    broadcast!(socket, "player_joined", %{count: 1})
     {:noreply, socket}
   end
 
   def handle_info({ :player2_joined, _ }, socket) do   
-    push socket, "player_joined", %{message: "slave"}
-    broadcast!(socket, "game_set", %{message: true})
+    push socket, "set_role", %{role: "slave"}
+    broadcast!(socket, "player_joined", %{count: 2})
+    {:noreply, socket}
+  end
+
+  def handle_in("player1_ready", _payload, socket) do    
+    broadcast!(socket, "player1_ready", %{ready: true})
+    {:noreply, socket}
+  end
+
+  def handle_in("player2_ready", _payload, socket) do    
+    broadcast!(socket, "player2_ready", %{ready: true})
     {:noreply, socket}
   end
 
