@@ -42,7 +42,7 @@ defmodule AirHockeyBackendWeb.GameChannel do
 
   def handle_info({ :player2_joined, _ }, socket) do   
     push socket, "set_role", %{role: "slave"}
-    broadcast!(socket, "player_joined", %{count: 2})
+    broadcast!(socket, "player_joined", %{count: 2, subscribers: get_subscriber_list(socket)})
     {:noreply, socket}
   end
 
@@ -58,7 +58,7 @@ defmodule AirHockeyBackendWeb.GameChannel do
 
   def handle_in("start_game", _payload, socket) do
     :ok = Presence.untrack(self(), "subtopic_listing", socket.assigns.name)
-    broadcast!(socket, "game_started", %{message: true, subscribers: get_subscriber_list(socket)})
+    broadcast!(socket, "game_started", %{message: true})
     {:noreply, socket}
   end
   
@@ -94,7 +94,7 @@ defmodule AirHockeyBackendWeb.GameChannel do
   end
 
   def handle_in("chat_message_out", %{"name" => name, "newMessage" => new_message}, socket) do    
-    broadcast!(socket, "incoming_chat_message", %{name: name, incoming_message: new_message, timestamp: inspect(System.system_time(:second)) })
+    broadcast!(socket, "incoming_chat_message", %{name: name, incoming_message: new_message, timestamp: inspect(System.system_time(:millisecond)) })
     {:noreply, socket}
   end
 
