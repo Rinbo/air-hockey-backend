@@ -14,11 +14,7 @@ defmodule AirHockeyBackendWeb.GameChannel do
   end
 
   def handle_info({:after_join, name}, socket) do
-    :ok = Phoenix.PubSub.subscribe(
-              socket.pubsub_server,
-              "subtopic_listing",
-              fastlane: {socket.transport_pid, socket.serializer, []}
-            )      
+    
     {:ok, _} = Presence.track(self(), "subtopic_listing", name, %{online_at: inspect(System.system_time(:second)), topic: socket.topic})
    
     {:ok, _} = Presence.track(socket, name, %{online_at: inspect(System.system_time(:second))})
