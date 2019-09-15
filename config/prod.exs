@@ -23,15 +23,12 @@ config :logger, level: :info
 
   config :air_hockey_backend, AirHockeyBackendWeb.Endpoint,       
     debug_errors: true,
-    check_origin: false  
+    check_origin: false,  
     #url: [host: "localhost", port: 3000]
-#       https: [
-#         :inet6,
-#         port: 443,
-#         cipher_suite: :strong,
-#         keyfile: System.get_env("SOME_APP_SSL_KEY_PATH"),
-#         certfile: System.get_env("SOME_APP_SSL_CERT_PATH")
-#       ]
+    https: [      
+      port: 443,
+      cipher_suite: :compatible
+    ]
 #
 # The `cipher_suite` is set to `:strong` to support only the
 # latest and more secure SSL ciphers. This means old browsers
