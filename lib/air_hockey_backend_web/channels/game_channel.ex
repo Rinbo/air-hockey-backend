@@ -101,7 +101,8 @@ defmodule AirHockeyBackendWeb.GameChannel do
   defp list_games_with_player_count() do 
     total_entries = Presence.list("subtopic_listing")
     |> Map.values
-    |> Enum.map(fn element -> 
+    |> Enum.map(fn element ->
+      IO.inspect(element)
       %{ metas: [%{online_at: _, phx_ref: _, topic: "game:" <> g_name}]} = element
       g_name
     end)
