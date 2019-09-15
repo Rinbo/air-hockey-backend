@@ -11,7 +11,7 @@ defmodule AirHockeyBackendWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug CORSPlug, origin: "http://localhost:3000"
+    plug CORSPlug, origin: ["http://localhost:3000", "https://rinbo.github.io/air-hockey-frontend", "https://airhockey.borjessons.nu"]
   end
 
   scope "/", AirHockeyBackendWeb do
