@@ -23,7 +23,6 @@ config :logger, level: :info
 
   config :air_hockey_backend, AirHockeyBackendWeb.Endpoint,       
     debug_errors: true,
-    code_reloader: true,
     check_origin: false  
     #url: [host: "localhost", port: 3000]
 #       https: [
