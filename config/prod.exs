@@ -21,8 +21,11 @@ config :logger, level: :info
 # To get SSL working, you will need to add the `https` key
 # to the previous section and set your `:url` port to 443:
 
-     config :air_hockey_backend, AirHockeyBackendWeb.Endpoint,       
-       url: [host: "localhost", port: 3000]
+  config :air_hockey_backend, AirHockeyBackendWeb.Endpoint,       
+    debug_errors: true,
+    code_reloader: true,
+    check_origin: false  
+    #url: [host: "localhost", port: 3000]
 #       https: [
 #         :inet6,
 #         port: 443,
