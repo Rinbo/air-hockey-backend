@@ -14,8 +14,9 @@ defmodule AirHockeyBackendWeb.GameChannel do
   end
 
   def handle_info({:after_join, name}, socket) do
-    
-    {:ok, _} = Presence.track(self(), "subtopic_listing", name, %{online_at: inspect(System.system_time(:second)), topic: socket.topic})
+    unless (socket.topic == "game:lobby") do
+      {:ok, _} = Presence.track(self(), "subtopic_listing", name, %{online_at: inspect(System.system_time(:second)), topic: socket.topic})
+    end
    
     {:ok, _} = Presence.track(socket, name, %{online_at: inspect(System.system_time(:second))})
     
