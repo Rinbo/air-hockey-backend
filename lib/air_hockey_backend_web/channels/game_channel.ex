@@ -133,7 +133,7 @@ defmodule AirHockeyBackendWeb.GameChannel do
   end
 
   defp get_subscriber_list(socket) do
-    [player1, player2] = Map.keys(Presence.list(socket))
+    [player2, player1] = Map.keys(Presence.list(socket))
     %{player1: player1, player2: player2}
   end
 
