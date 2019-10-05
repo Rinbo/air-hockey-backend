@@ -25,7 +25,7 @@ defmodule AirHockeyBackendWeb.GameChannel do
         1 -> 
           send(self(), {:player1_joined, %{}})
         2 -> 
-          send(self(), {:player2_joined, %{}})
+          send(self(), {:player2_joined, name})
       end
     end
     {:noreply, assign(socket, :name, name)}
@@ -37,9 +37,9 @@ defmodule AirHockeyBackendWeb.GameChannel do
     {:noreply, socket}
   end
 
-  def handle_info({ :player2_joined, _ }, socket) do   
+  def handle_info({ :player2_joined, name }, socket) do   
     push socket, "set_role", %{role: "slave"}
-    broadcast!(socket, "player_joined", %{count: 2, subscribers: get_subscriber_list(socket)})
+    broadcast!(socket, "player_joined", %{count: 2, subscribers: %{player1: get_player1(socket, name), player2: name}})
     {:noreply, socket}
   end
 
@@ -132,9 +132,10 @@ defmodule AirHockeyBackendWeb.GameChannel do
     end
   end
 
-  defp get_subscriber_list(socket) do
-    [player2, player1] = Map.keys(Presence.list(socket))
-    %{player1: player1, player2: player2}
+  defp get_player1(socket, name_player2) do
+    [name1, name2] = Map.keys(Presence.list(socket))
+    [player1] = Enum.filter([name1, name2], fn element -> element != name_player2 end)
+    player1
   end
 
   defimpl Jason.Encoder, for: [MapSet, Range, Stream] do
